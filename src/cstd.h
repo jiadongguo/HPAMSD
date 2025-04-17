@@ -71,6 +71,10 @@
 #define ABS(x) ((x) < 0 ? -(x) : (x))
 #endif
 
+#ifndef SQUARE
+#define SQUARE(x) ((x) * (x))
+#endif
+
 #ifndef MAX
 #define MAX(x, y) ((x) > (y) ? (x) : (y))
 #endif

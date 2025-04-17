@@ -1,0 +1,104 @@
+# https://github.com/bobwenstudy/scons_demo/blob/main/SConstruct-%E6%A8%A1%E6%9D%BF
+
+
+import os
+def get_path_files(dirs, file_ext):
+    path_files = []
+    for dir in dirs:
+        path_files.append(Glob(dir + '/' + file_ext))
+    return path_files
+
+PREFIX = 'jd'
+CC = 'gcc'
+CXX = 'g++'
+
+SIZE = PREFIX + 'size'
+OBJDUMP = PREFIX + 'objdump'
+OBJCPY = PREFIX + 'objcopy'
+
+
+TARGET_PATH = '../bin/'
+TARGET_NAME = 'main'
+TARGET = TARGET_PATH + PREFIX + TARGET_NAME
+
+
+###################################################################################
+# C source dirs config
+C_DIRS = ['src']
+#C_DIRS.append('src')
+
+# C source files config
+C_FILES = []
+
+
+###################################################################################
+# -I, Include path config
+CPP_PATH = ['include']
+
+# -D, Preprocess Define
+CPP_DEFINES = []
+#CPP_DEFINES.append('CFG_TEST')
+
+# C generate define
+C_FLAGS = []
+C_FLAGS.append('-O3')
+C_FLAGS.append('-g')
+C_FLAGS.append('-std=c99')
+
+# C and C++ generate define
+CC_FLAGS = []
+CC_FLAGS.append('-Wall')
+
+
+
+
+# Link Config
+LINK_FLAGS = []
+#LINK_FLAGS.append('-Wl,–gc-sections')
+
+
+# lib path.
+LIB_PATH = []
+#LIB_PATH.append('lib')
+
+
+# .lib, .a file
+LIBS_FILES = Split('m fftw3f')
+#LIBS_FILES.append('test')
+
+
+env = Environment()
+
+###################################################################################
+
+env['CC'] = CC
+env['CXX'] = CXX
+
+
+
+###################################################################################
+
+env.Append(CFLAGS=C_FLAGS)
+env.Append(CCFLAGS=CC_FLAGS)
+env.Append(CPPDEFINES=CPP_DEFINES)
+env.Append(CPPPATH=CPP_PATH)
+env.Append(LIBPATH=LIB_PATH)
+env.Append(LIBS=LIBS_FILES)
+
+###################################################################################
+com_srcs=Split(r'coeff.c cstd.c ricker.c')
+com_objs=env.Object(com_srcs)
+###################################################################################
+reg_srcs=Split(r'regular.c')
+reg_objs=env.Object(reg_srcs)
+regmodeling=TARGET_PATH + PREFIX + r'regmodeling'
+
+t_regmodeling = env.Program('regmodeling', reg_objs+com_objs)
+###################################################################################
+# sg_srcs=Split(r'sg.c')
+# sgmodeling=TARGET_PATH + PREFIX + r'sgmodeling'
+# t_sgmodeling = env.Program(sgmodeling, sg_srcs+com_srcs)
+###################################################################################
+
+
+
