@@ -1,6 +1,3 @@
-/*
-普通常规程序，对比使用
-*/
 #include "cstd.h"
 float *ricker(int nt, float dt, float fm, float t0);
 void pml_init();

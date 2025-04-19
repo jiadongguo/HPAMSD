@@ -1,15 +1,17 @@
 /*
-普通二阶中心差分
+普通中心差分
 */
 #include "cstd.h"
-float *ricker(int nt, float dt, float fm, float t0);
 void set_zero(float *p, int n);
 void step_forward(float **p0, float **p1, float **p2);
 void write_float(const char *filename, float *p, int n);
-float bnd(float **p, int ix, int iz, int nx, int nz);
+float bnd(float **p, int ix, int iz);
+float *ricker(int nt, float dt, float fm, float t0);
+float laplace2(float **p, int ix, int iz);
 static int nz, nx, nt;
 static float dh, dt, fm, t0;
-float v = 3000; /* velocity */
+static int order;
+float v; /* velocity */
 int main(int argc, char **argv)
 {
     initargs(argc, argv);
@@ -32,6 +34,9 @@ int main(int argc, char **argv)
         err("need wfd=");
     if (!getparfloat("c", &v))
         err("need c=");
+    if (!getparint("order", &order))
+        order = 10;
+    warn("order=%d", order);
     int sz = nz / 2, sx = nx / 2;
     /* wavelet */
     float *wt = ricker(nt, dt, fm, t0);
@@ -66,10 +71,8 @@ void step_forward(float **p0, float **p1, float **p2)
     {
         for (int iz = 0; iz < nz; iz++)
         {
-            p2[ix][iz] = SQUARE(v * dt / dh) *
-                             ((bnd(p1, ix + 1, iz, nx, nz) - 2 * p1[ix][iz] + bnd(p1, ix - 1, iz, nx, nz)) +
-                              (bnd(p1, ix, iz + 1, nx, nz) - 2 * p1[ix][iz] + bnd(p1, ix, iz - 1, nx, nz))) +
-                         2 * p1[ix][iz] - p0[ix][iz];
+            p2[ix][iz] = SQUARE(v * dt / dh) * laplace2(p1, ix, iz) + 2 * p1[ix][iz] - p0[ix][iz];
+            // p2[ix][iz] = SQUARE(v * dt / dh) * (p1[ix + 1][iz] + p1[ix - 1][iz] + p1[ix][iz + 1] + p1[ix][iz - 1] - 4 * p1[ix][iz]) + 2 * p1[ix][iz] - p0[ix][iz];
         }
     }
 }
@@ -83,9 +86,41 @@ void set_zero(float *p, int n)
 {
     memset(p, 0, sizeof(float) * n);
 }
-float bnd(float **p, int ix, int iz, int nx, int nz)
+float bnd(float **p, int ix, int iz)
 {
     if (ix < 0 || ix >= nx || iz < 0 || iz >= nz)
         return 0;
     return p[ix][iz];
+}
+float laplace2(float **p, int ix, int iz)
+{
+    float *c;
+    static float c2[] = {-2., 1.};
+    static float c4[] = {-5. / 2, 4. / 3, -1. / 12};
+    static float c6[] = {-49. / 18, 3. / 2, -3. / 20, 1. / 90};
+    static float c8[] = {-205. / 72, 8. / 5, -1. / 5, 8. / 315, -1. / 560};
+    static float c10[] = {-5269. / 1800, 5. / 3, -5. / 21, 5. / 126, -5. / 1008, 1. / 3150};
+    switch (order)
+    {
+    case 2:
+        c = c2;
+        break;
+    case 4:
+        c = c4;
+        break;
+    case 6:
+        c = c6;
+        break;
+    case 8:
+        c = c8;
+    default:
+        c = c10;
+        break;
+    }
+    float ret = 2 * c[0] * p[ix][iz];
+    for (int i = 1; i < order / 2 + 1; i++)
+    {
+        ret += c[i] * (bnd(p, ix + i, iz) + bnd(p, ix - i, iz) + bnd(p, ix, iz + i) + bnd(p, ix, iz - i));
+    }
+    return ret;
 }

@@ -1,0 +1,13 @@
+#!/bin/bash
+echo "
+nz=400
+nx=400
+dh=10
+dt=0.001
+nt=500
+fm=20
+t0=0.1
+c=3000
+wfd=wfd.bin
+" > par.txt
+./common1 $(cat par.txt)
